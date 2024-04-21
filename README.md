@@ -165,3 +165,21 @@ docker_image.nginx: Destruction complete after 0s
 Destroy complete! Resources: 2 destroyed.
 henkenbrink@penguin:$ 
 ```
+
+## Der Terraform State
+Wenn man die Konfiguration via ```terraform apply``` deployed hat, schreibt Terraform in eine Datei ```terraform.tfstate```. Darin speichert Terraform die IDs und Properties der Ressourcen, die angelegt wurden und die von Terraform verwaltet werden. Mit diesem State kann Terraform dann die Updates und Destroys auf dieser Konfiguration durchführen.
+
+
+Die Terraform-State-Datei ist der einzige Ort, über den Terraform weiß, wlche Ressourcen von ihm verwalet werden. Oftmals sind darin geheime Informationen wie Passwörter etc. enthalten. Das ```terraform.tfstate```-File sollte aus diesem Grund sicher gespeichert und der Zugriff eingeschränkt werden. 
+
+Für Produktionsumgebungen wird empfohlen, den State remote zu halten.
+
+Die Datei liegt standardmäßig im selben Ordner wie die Konfiguration selbst. Um sie nicht versehentlich einzuchecken, sind in einer via github erzeugten .gitignore-Datei die beiden folgenden Einträge bereits enthalten:
+
+```
+# .tfstate files
+*.tfstate
+*.tfstate.*
+```
+So gelangt weder der State selbst, noch sein Backup in dem Repository.
+
