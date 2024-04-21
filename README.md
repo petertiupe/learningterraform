@@ -285,3 +285,49 @@ Die Datei liegt standardmäßig im selben Ordner wie die Konfiguration selbst. U
 ```
 So gelangt weder der State selbst, noch sein Backup in dem Repository.
 
+
+### Änderungen am Deployment
+
+Macht man Änderungen am Deployment, so können diese sich unterschiedlich auswirken. Ändert man z. B. den externen Port
+des Docker-Containers, so erkennt Terraform, dass es diesen nicht im Container selbst ändern kann und zeigt bei einem
+```terraform plan``` daher an, dass der alte Container zerstört und ein neuer erzeugt werden muss:
+
+```
+henkenbrink@penguin:$ terraform plan -out petersConfig
+docker_image.nginx: Refreshing state... [id=sha256:2ac752d7aeb1d9281f708e7c51501c41baf90de15ffc9bca7c5d38b8da41b580nginx]
+docker_container.nginx: Refreshing state... [id=b0e6873adef2bae5dee105acbc45bfb2d1a663756fbf655545a545724ea9e1e7]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # docker_container.nginx must be replaced
+-/+ resource "docker_container" "nginx" {
+      + bridge                                      = (known after apply)
+      ~ command                                     = [
+          - "nginx",
+          - "-g",
+          - "daemon off;",
+        ] -> (known after apply)
+      + container_logs                              = (known after apply)
+      - cpu_shares                                  = 0 -> null
+      - dns                                         = [] -> null
+      - dns_opts                                    = [] -> null
+      ...
+
+```
+Wichtig ist hier die Zeile ```# docker_container.nginx must be replaced```!
+
+Der Apply auf dieser Zeile führt dann das Gewünschte aus:
+
+```
+henkenbrink@penguin:$ terraform apply petersConfig
+docker_container.nginx: Destroying... [id=b0e6873adef2bae5dee105acbc45bfb2d1a663756fbf655545a545724ea9e1e7]
+docker_container.nginx: Destruction complete after 0s
+docker_container.nginx: Creating...
+docker_container.nginx: Creation complete after 0s [id=d487e2bd5ccdc0d079dacaec177922ab236b150d69a0b34cf0411b67b6579d65]
+
+Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
+henkenbrink@penguin:$ 
+```
